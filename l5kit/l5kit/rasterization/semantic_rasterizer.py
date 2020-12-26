@@ -180,12 +180,26 @@ class SemanticRasterizer(Rasterizer):
             lane_type = "default"  # no traffic light face is controlling this lane
             lane_tl_ids = set([MapAPI.id_as_str(la_tc) for la_tc in lane.traffic_controls])
             for tl_id in lane_tl_ids.intersection(active_tl_ids):
+                
+                tl_element = self.proto_API[tl_id].element.traffic_control_element
+                tl_xyz     = self.proto_API.unpack_deltas_cm(tl_element.points_x_deltas_cm,
+                                                   tl_element.points_y_deltas_cm,
+                                                   tl_element.points_z_deltas_cm,
+                                                   tl_element.geo_frame)
+                tl_xy_center = np.expand_dims(np.mean(tl_xyz, axis=0)[:2], 0)
+                tl_xy = np.round(transform_points(tl_xy_center[:,:2], raster_from_world), 0).astype(np.int)                
+
                 if self.proto_API.is_traffic_face_colour(tl_id, "red"):
                     lane_type = "red"
+                    lane_color = (255, 0, 0)
                 elif self.proto_API.is_traffic_face_colour(tl_id, "green"):
                     lane_type = "green"
+                    lane_color = (0, 255, 0)
                 elif self.proto_API.is_traffic_face_colour(tl_id, "yellow"):
                     lane_type = "yellow"
+                    lane_color = (255, 255, 0)
+
+                cv2.circle(img, tuple(tl_xy[0]), 3, lane_color, -1) # TL visualized.
 
             lanes_lines[lane_type].extend([xy_left, xy_right])
 
