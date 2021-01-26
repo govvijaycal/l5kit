@@ -1,6 +1,6 @@
 # L5Kit Notes
 
-I am working with version 1.1.0.  This version includes prediction + planning notebooks and support for dynamic traffic lights.
+I am working with version 1.2.0.  This version includes prediction + planning notebooks and support for dynamic traffic lights.
 
 ---
 ## data_format.md

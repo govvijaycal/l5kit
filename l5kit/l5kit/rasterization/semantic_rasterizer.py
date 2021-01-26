@@ -154,21 +154,21 @@ class SemanticRasterizer(Rasterizer):
             lane_tl_ids = set(self.mapAPI.get_lane_traffic_control_ids(lane_idx))
             for tl_id in lane_tl_ids.intersection(active_tl_ids):
 
-                tl_element = self.proto_API[tl_id].element.traffic_control_element
-                tl_xyz     = self.proto_API.unpack_deltas_cm(tl_element.points_x_deltas_cm,
+                tl_element = self.mapAPI[tl_id].element.traffic_control_element
+                tl_xyz     = self.mapAPI.unpack_deltas_cm(tl_element.points_x_deltas_cm,
                                                    tl_element.points_y_deltas_cm,
                                                    tl_element.points_z_deltas_cm,
                                                    tl_element.geo_frame)
                 tl_xy_center = np.expand_dims(np.mean(tl_xyz, axis=0)[:2], 0)
                 tl_xy = np.round(transform_points(tl_xy_center[:,:2], raster_from_world), 0).astype(np.int)                
 
-                if self.proto_API.is_traffic_face_colour(tl_id, "red"):
+                if self.mapAPI.is_traffic_face_color(tl_id, "red"):
                     lane_type = "red"
                     lane_color = (255, 0, 0)
-                elif self.proto_API.is_traffic_face_colour(tl_id, "green"):
+                elif self.mapAPI.is_traffic_face_color(tl_id, "green"):
                     lane_type = "green"
                     lane_color = (0, 255, 0)
-                elif self.proto_API.is_traffic_face_colour(tl_id, "yellow"):
+                elif self.mapAPI.is_traffic_face_color(tl_id, "yellow"):
                     lane_type = "yellow"
                     lane_color = (255, 255, 0)
 
