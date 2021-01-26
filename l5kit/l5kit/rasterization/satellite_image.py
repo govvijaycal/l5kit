@@ -7,11 +7,11 @@ from l5kit.geometry import transform_point
 
 
 def get_sat_image_crop_scaled_from_ecef(
-    sat_image: np.ndarray,
-    crop_size: Union[Tuple[int, int], np.ndarray],
-    ecef_translation: np.ndarray,
-    ecef_to_sat: np.ndarray,
-    **kwargs: Any,
+        sat_image: np.ndarray,
+        crop_size: Union[Tuple[int, int], np.ndarray],
+        ecef_translation: np.ndarray,
+        ecef_to_sat: np.ndarray,
+        **kwargs: Any,
 ) -> np.ndarray:
     """Utility function, calls get_sat_image_crop_scaled, see that function for more details on additional
     keyword arguments (such as ``yaw``).
@@ -30,13 +30,13 @@ def get_sat_image_crop_scaled_from_ecef(
 
 
 def get_sat_image_crop_scaled(
-    sat_image: np.ndarray,
-    crop_size: Union[Tuple[int, int], np.ndarray],
-    sat_pixel_translation: np.ndarray,
-    yaw: Optional[float] = None,
-    sat_pixel_scale: float = 1.0,
-    pixel_size: float = 1.0,
-    interpolation: int = cv2.INTER_LINEAR,
+        sat_image: np.ndarray,
+        crop_size: Union[Tuple[int, int], np.ndarray],
+        sat_pixel_translation: np.ndarray,
+        yaw: Optional[float] = None,
+        sat_pixel_scale: float = 1.0,
+        pixel_size: float = 1.0,
+        interpolation: int = cv2.INTER_LINEAR,
 ) -> np.ndarray:
     """Calls `get_sat_image_crop` (see that function's docs for further details), and rescales taking
         into account a desired pixel size.
@@ -63,19 +63,28 @@ def get_sat_image_crop_scaled(
         (np.ndarray): a crop of input ``sat_image``
     """
 
-    crop_size_in_meters = np.array(crop_size) * pixel_size
+    max_crop_size = [max(crop_size), max(crop_size)]
+    crop_size_in_meters = np.array(max_crop_size) * pixel_size
     crop_size_in_sat_pixels = np.int0(np.round(crop_size_in_meters / sat_pixel_scale))
 
     sat_crop = get_sat_image_crop(sat_image, crop_size_in_sat_pixels, sat_pixel_translation, yaw)
 
-    return cv2.resize(sat_crop, tuple(crop_size), interpolation=interpolation)
+    resized_sat_crop = cv2.resize(sat_crop, tuple(max_crop_size), interpolation=interpolation)
+    start_x = np.int0(resized_sat_crop.shape[0] / 2 - crop_size[1] / 2)
+    end_x = start_x + crop_size[1]
+    start_y = np.int0(resized_sat_crop.shape[1] / 2 - crop_size[0] / 2)
+    end_y = start_y + crop_size[0]
+
+    out_sat_crop = resized_sat_crop[start_x:end_x, start_y:end_y]
+
+    return out_sat_crop
 
 
 def get_sat_image_crop(
-    sat_image: np.ndarray,
-    crop_size: Union[Tuple[int, int], np.ndarray],
-    sat_pixel_translation: np.ndarray,
-    yaw: Optional[float] = None,
+        sat_image: np.ndarray,
+        crop_size: Union[Tuple[int, int], np.ndarray],
+        sat_pixel_translation: np.ndarray,
+        yaw: Optional[float] = None,
 ) -> np.ndarray:
     """Crops input satellite such that ``sat_pixel_translation`` is centered in the image.
 
@@ -113,7 +122,7 @@ def get_sat_image_crop(
 
 
 def _get_sat_image_crop_without_rotation(
-    sat_image: np.ndarray, crop_size: np.ndarray, sat_pixel_translation: np.ndarray
+        sat_image: np.ndarray, crop_size: np.ndarray, sat_pixel_translation: np.ndarray
 ) -> np.ndarray:
     """
     Crops satellite image around given translation.
