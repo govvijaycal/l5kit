@@ -23,6 +23,15 @@ PERCEPTION_LABELS_TO_KEEP = [
 ]
 PERCEPTION_LABEL_INDICES_TO_KEEP = [PERCEPTION_LABEL_TO_INDEX[label] for label in PERCEPTION_LABELS_TO_KEEP]
 
+VEHICLE_LABELS_TO_KEEP = [
+    "PERCEPTION_LABEL_CAR",
+    "PERCEPTION_LABEL_VAN",
+    "PERCEPTION_LABEL_BUS",
+    "PERCEPTION_LABEL_TRUCK",
+    "PERCEPTION_LABEL_EMERGENCY_VEHICLE",
+    "PERCEPTION_LABEL_OTHER_VEHICLE",
+]
+VEHICLE_LABEL_INDICES_TO_KEEP = [PERCEPTION_LABEL_TO_INDEX[label] for label in VEHICLE_LABELS_TO_KEEP]
 
 def _get_label_filter(label_probabilities: np.ndarray, threshold: float) -> np.array:
     """
@@ -40,6 +49,23 @@ def _get_label_filter(label_probabilities: np.ndarray, threshold: float) -> np.a
         np.array -- A binary array which can be used to mask agents.
     """
     return np.sum(label_probabilities[:, PERCEPTION_LABEL_INDICES_TO_KEEP], axis=1) > threshold
+
+def _get_label_filter_vehicle(label_probabilities: np.ndarray, threshold: float) -> np.array:
+    """
+
+    Arguments:
+        label_probabilities (np.ndarray): Given the probabilities of all labels, returns a binary mask
+        of those whose summed probability of the classes we are interested in is higher than the given threshold.
+
+        This set of classes "we are interested in" is hardcoded for now: these include "vehicle"-like classes.
+
+    Keyword Arguments:
+        threshold (float): probability threshold for filtering
+
+    Returns:
+        np.array -- A binary array which can be used to mask agents.
+    """
+    return np.sum(label_probabilities[:, VEHICLE_LABEL_INDICES_TO_KEEP], axis=1) > threshold
 
 
 def filter_agents_by_labels(agents: np.ndarray, threshold: float = 0.5) -> np.ndarray:

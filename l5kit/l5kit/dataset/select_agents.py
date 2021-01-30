@@ -9,7 +9,7 @@ from functools import partial
 from multiprocessing import cpu_count, Pool
 from pathlib import Path
 from tempfile import gettempdir
-from typing import Tuple
+from typing import Tuple, Optional
 from uuid import uuid4
 
 import numpy as np
@@ -18,7 +18,7 @@ from prettytable import PrettyTable
 from tqdm import tqdm
 
 from l5kit.data import ChunkedDataset
-from l5kit.data.filter import _get_label_filter  # TODO expose this without digging
+from l5kit.data.filter import _get_label_filter, _get_label_filter_vehicle  # TODO expose this without digging
 from l5kit.geometry import angular_distance
 
 
@@ -80,6 +80,7 @@ def get_valid_agents(
         th_yaw_degree: float,
         th_extent_ratio: float,
         th_distance_av: float,
+        filter_type: Optional[str] = None,
 ) -> Tuple[np.ndarray, Counter, tuple]:
     """
     Two types of filters are implemented:
@@ -104,7 +105,13 @@ def get_valid_agents(
     report: Counter = Counter()
 
     # filter here for point-wise to speed up
-    of_interest = _get_label_filter(agents["label_probabilities"], th_agent_filter_probability_threshold)
+    if filter_type is None or filter_type == 'agent':
+        of_interest = _get_label_filter(agents["label_probabilities"], th_agent_filter_probability_threshold)
+    elif filter_type == 'vehicle':
+        of_interest = _get_label_filter_vehicle(agents["label_probabilities"], th_agent_filter_probability_threshold)
+    else:
+        raise ValueError("Invalid filter_type argument: " + filter_type)
+
     global_agent_idx = -1
     for frame_idx in range(len(frames)):
         frame = frames[frame_idx]
@@ -164,11 +171,15 @@ def select_agents(
         th_yaw_degree: float,
         th_extent_ratio: float,
         th_distance_av: float,
+        filter_type: Optional[str] = None,
 ) -> None:
     """
     Filter agents from zarr INPUT_FOLDER according to multiple thresholds and store a boolean array of the same shape.
     """
-    agents_mask_path = Path(zarr_dataset.path) / f"agents_mask/{th_agent_prob}"
+    if filter_type is None:
+        agents_mask_path = Path(zarr_dataset.path) / f"agents_mask/{th_agent_prob}"
+    else:
+        agents_mask_path = Path(zarr_dataset.path) / f"agents_mask/{th_agent_prob}_{filter_type}"
 
     if agents_mask_path.exists():
         raise FileExistsError(f"{th_agent_prob} exists already! only one is supported!")
@@ -183,6 +194,7 @@ def select_agents(
         th_yaw_degree=th_yaw_degree,
         th_extent_ratio=th_extent_ratio,
         th_distance_av=th_distance_av,
+        filter_type=filter_type,
     )
 
     try:
