@@ -153,6 +153,26 @@ class SemanticRasterizer(Rasterizer):
             lane_type = RasterEls.LANE_NOTL.name
             lane_tl_ids = set(self.mapAPI.get_lane_traffic_control_ids(lane_idx))
             for tl_id in lane_tl_ids.intersection(active_tl_ids):
+
+                tl_element = self.mapAPI[tl_id].element.traffic_control_element
+                tl_xyz     = self.mapAPI.unpack_deltas_cm(tl_element.points_x_deltas_cm,
+                                                   tl_element.points_y_deltas_cm,
+                                                   tl_element.points_z_deltas_cm,
+                                                   tl_element.geo_frame)
+                tl_xy_center = np.expand_dims(np.mean(tl_xyz, axis=0)[:2], 0)
+                tl_xy = np.round(transform_points(tl_xy_center[:,:2], raster_from_world), 0).astype(np.int)                
+
+                if self.mapAPI.is_traffic_face_color(tl_id, "red"):
+                    lane_type = "red"
+                    lane_color = (255, 0, 0)
+                elif self.mapAPI.is_traffic_face_color(tl_id, "green"):
+                    lane_type = "green"
+                    lane_color = (0, 255, 0)
+                elif self.mapAPI.is_traffic_face_color(tl_id, "yellow"):
+                    lane_type = "yellow"
+                    lane_color = (255, 255, 0)
+
+                cv2.circle(img, tuple(tl_xy[0]), 3, lane_color, -1) # TL visualized.
                 lane_type = self.mapAPI.get_color_for_face(tl_id)
 
             lanes_mask[lane_type][idx * 2: idx * 2 + 2] = True
