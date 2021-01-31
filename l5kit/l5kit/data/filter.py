@@ -63,7 +63,7 @@ def _get_label_filter_vehicle(label_probabilities: np.ndarray, threshold: float)
         threshold (float): probability threshold for filtering
 
     Returns:
-        np.array -- A binary array which can be used to mask agents.
+        np.array -- A binary array which can be used to mask "vehicle"-like agents.
     """
     return np.sum(label_probabilities[:, VEHICLE_LABEL_INDICES_TO_KEEP], axis=1) > threshold
 
@@ -83,6 +83,38 @@ def filter_agents_by_labels(agents: np.ndarray, threshold: float = 0.5) -> np.nd
     label_indices = _get_label_filter(agents["label_probabilities"], threshold)
     return agents[label_indices]
 
+def filter_vehicle_agents_by_labels(agents: np.ndarray, threshold: float = 0.5) -> np.ndarray:
+    """Filters an agents array, keeping those agents that meet the threshold for being "vehicle"-like.
+
+    Arguments:
+        agents (np.ndarray): Agents array
+
+    Keyword Arguments:
+        threshold (float): probability threshold for filtering (default: {0.5})
+
+    Returns:
+        np.ndarray -- A subset of input ``agents`` array that are "vehicle"-like.
+    """
+    label_indices = _get_label_filter_vehicle(agents["label_probabilities"], threshold)
+    return agents[label_indices]
+
+def filter_nonvehicle_agents_by_labels(agents: np.ndarray, threshold: float = 0.5) -> np.ndarray:
+    """Filters an agents array, keeping those agents that meet the threshold for being relevant
+       but not vehicle-like.
+
+    Arguments:
+        agents (np.ndarray): Agents array
+
+    Keyword Arguments:
+        threshold (float): probability threshold for filtering (default: {0.5})
+
+    Returns:
+        np.ndarray -- A subset of input ``agents`` array that are relevant but not "vehicle"-like.
+    """
+    vehicle_label_indices = _get_label_filter_vehicle(agents["label_probabilities"], threshold)
+    agent_label_indices   = _get_label_filter(agents["label_probabilities"], threshold)
+    nonvehicle_label_indices = agent_label_indices * ~vehicle_label_indices
+    return agents[nonvehicle_label_indices]
 
 def filter_agents_by_track_id(agents: np.ndarray, track_id: int) -> np.ndarray:
     """Return all agent object (np.ndarray) of a given track_id.

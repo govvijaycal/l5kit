@@ -72,7 +72,7 @@ def cv2_subpixel(coords: np.ndarray) -> np.ndarray:
     return coords
 
 
-class SemanticRasterizer(Rasterizer):
+class SemanticRasterizerVG(Rasterizer):
     """
     Rasteriser for the vectorised semantic map (generally loaded from json files).
     """
